@@ -1,0 +1,36 @@
+# Use postgres/example user/password credentials
+version: "3.3"
+
+services:
+  database:
+    container_name: database
+    image: elestio/postgres:latest
+    restart: always
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data/
+    env_file: .env
+    ports:
+      - 172.17.0.1:5432:5432
+
+  calcom:
+    image: calcom/cal.com:${SOFTWARE_VERSION_TAG}
+    restart: always
+    ports:
+      - 172.17.0.1:6424:3000
+    env_file: .env
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DATABASE_HOST}/${POSTGRES_DB}
+    depends_on:
+      - database
+
+  pgadmin4:
+    image: dpage/pgadmin4:latest
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${ADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${ADMIN_PASSWORD}
+      PGADMIN_LISTEN_PORT: 8080
+    ports:
+      - "172.17.0.1:8080:8080"
+    volumes:
+      - ./servers.json:/pgadmin4/servers.json
